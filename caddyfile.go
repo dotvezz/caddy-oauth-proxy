@@ -1,6 +1,7 @@
 package oauth
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/dotvezz/caddy-oauth-proxy/providers"
@@ -93,9 +94,12 @@ func mapConfigFromGlobal(global *Config, config *Config) {
 	if global.ErrorPage != "" {
 		config.ErrorPage = global.ErrorPage
 	}
+
 	if global.RedirectURI != "" {
 		config.RedirectURI = global.RedirectURI
 	}
+
+	config.AllowUnauthenticated = global.AllowUnauthenticated
 }
 
 // parseFromCustomHelper handles the actual parsing of the caddyfile directive, whether global or in a handler
@@ -128,6 +132,21 @@ func parseFromCustomHelper(h caddyfileHelper, c *Config) error {
 				return h.ArgErr()
 			}
 			c.ErrorPage = h.Val()
+		case "allow_unauthenticated":
+			args := h.RemainingArgs()
+
+			switch {
+			case len(args) == 0:
+				c.AllowUnauthenticated = true
+			case len(args) > 1:
+				return h.Errf("too many allow_unauthenticated values")
+			default:
+				var err error
+				c.AllowUnauthenticated, err = strconv.ParseBool(args[0])
+				if err != nil {
+					return h.Errf("invalid allow_unauthenticated value: %s", args[0])
+				}
+			}
 		case "cookie":
 			if c.CookieConfig == nil {
 				c.CookieConfig = new(CookieConfig)

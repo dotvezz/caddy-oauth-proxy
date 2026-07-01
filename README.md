@@ -48,6 +48,7 @@ An OAuth 2.0 reverse proxy plugin for [Caddy v2](https://caddyserver.com/). It a
 - Configurable error page for authentication failures
 - Singleflight token exchange to prevent duplicate requests from concurrent callbacks
 - Preserves the user's original URL across the authentication redirect
+- Optional `allow_unauthenticated` mode to pass unauthenticated requests through without redirecting
 
 ## How It Works
 
@@ -181,12 +182,13 @@ example.com {
 
 #### Top-level directives
 
-| Directive       | Description                                                      | Required |
-|-----------------|------------------------------------------------------------------|----------|
-| `redirect_uri`  | The full URL where the OAuth provider will redirect after login. Must match the callback route in your Caddyfile. | Yes |
-| `error_page`    | Path to redirect to when authentication fails.                   | No       |
-| `cookie { }`    | Cookie configuration block (see below).                          | No       |
-| `keycloak { }`  | Keycloak provider configuration block (see below).               | Yes      |
+| Directive                | Description                                                      | Required |
+|--------------------------|------------------------------------------------------------------|----------|
+| `redirect_uri`           | The full URL where the OAuth provider will redirect after login. Must match the callback route in your Caddyfile. | Yes |
+| `error_page`             | Path to redirect to when authentication fails.                   | No       |
+| `allow_unauthenticated`  | When set to `true`, unauthenticated requests are passed through to the next handler instead of being redirected to the OAuth provider. Authenticated requests still have the `Authorization` header set. Accepts `true`/`false`, or can be specified without a value (implies `true`). | No (default: `false`) |
+| `cookie { }`             | Cookie configuration block (see below).                          | No       |
+| `keycloak { }`           | Keycloak provider configuration block (see below).               | Yes      |
 
 #### Cookie block
 
@@ -314,7 +316,8 @@ Request arrives
       v
  [Check cookie state]
       |
-      +--> cookieStateNoCookie ----> Generate PKCE verifier, store in cookie, redirect to provider
+      +--> cookieStateNoCookie ----> If allow_unauthenticated: pass through to next handler (no auth headers)
+      |                             Otherwise: generate PKCE verifier, store in cookie, redirect to provider
       |
       +--> cookieStateIncomplete --> If at callback path: exchange code for tokens, store in cookie, redirect to original URL
       |                             If not at callback path: treat as no cookie (restart flow)

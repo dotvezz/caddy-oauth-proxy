@@ -58,7 +58,9 @@ func (h Handler) CaddyModule() caddy.ModuleInfo {
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) (err error) {
 	switch h.cookieState(r) {
 	case cookieStateNoCookie:
-		return h.handleNoCookie(w, r)
+		if !h.AllowUnauthenticated {
+			return h.handleNoCookie(w, r)
+		}
 	case cookieStateIncomplete:
 		ruri, _ := url.Parse(h.RedirectURI)
 
