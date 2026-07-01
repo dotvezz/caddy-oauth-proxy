@@ -1,0 +1,38 @@
+{
+    debug
+    metrics
+
+    oauth_proxy {
+        redirect_uri http://localhost:8080/oauth/callback
+        cookie {
+            name _login
+            max_age 750h
+            secret {$COOKIE_SECRET}
+        }
+        keycloak {
+            base_url {$KEYCLOAK_BASE_URL}
+            realm {$KEYCLOAK_REALM}
+            client_id {$KEYCLOAK_CLIENT_ID}
+            client_secret {$KEYCLOAK_CLIENT_SECRET}
+        }
+    }
+}
+
+
+http://localhost:8080 {
+    route /oauth/callback {
+        oauth_proxy
+    }
+
+    route /secure {
+        oauth_proxy
+
+        uri replace /secure /get
+        reverse_proxy https://httpbin.org
+    }
+
+    route /public {
+        uri replace /secure /get
+        reverse_proxy https://httpbin.org
+    }
+}

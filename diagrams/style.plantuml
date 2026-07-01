@@ -1,0 +1,48 @@
+@startuml
+<style>
+document {
+  BackgroundColor #F8F9FA
+}
+root {
+  Shadowing 1.0
+  RoundCorner 10
+}
+participant {
+  BackgroundColor #C8D7FF
+  LineColor #1976D2
+  LineThickness 0.5
+  FontName Helvetica
+  FontSize 13
+  FontStyle normal
+  Padding 10
+}
+arrow {
+  LineColor #424242
+  LineThickness 1.5
+  FontName Helvetica
+  FontSize 11
+  HorizontalAlignment left
+}
+note {
+  BackgroundColor #FFF9C4
+  LineColor #515D7F
+  LineThickness 0.5
+  /* FontName Helvetica */
+  FontSize 11
+}
+title {
+  /* FontName Helvetica */
+  FontSize 18
+  FontColor #515D7F
+  FontStyle Bold
+}
+box {
+  LineColor #DBE0EB
+}
+lifeline {
+  BackgroundColor #DBE0EB
+  LineColor #515D7F
+  LineThickness 0.5
+}
+</style>
+@enduml

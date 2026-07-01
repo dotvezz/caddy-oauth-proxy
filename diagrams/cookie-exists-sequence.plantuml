@@ -1,0 +1,35 @@
+@startuml
+
+!include style.plantuml
+
+participant browser as "Browser\n(User)"
+participant handler as "Handler"
+participant cookie as "Secure Cookie"
+participant provider as "Provider"
+participant next as "Next"
+
+title "Cookie Exists Flow"
+
+browser -> handler++: Send request\nwith cookie
+handler -> cookie++: Get oauth tokens\nfrom cookie
+handler <- cookie--
+alt No tokens for cookie\nor cookie expired
+    browser <- handler--: HTTP 302\nLocation: {Provider Login}
+    note right
+        Begin "No Cookie Flow"
+    end note
+else
+    handler -[hidden]-> handler++
+    opt Access Token Expired
+        handler -> provider++: Use refresh token\nto get new access\ntoken
+        handler <- provider--
+        handler -> cookie++: Save the refreshed token
+        handler <- cookie--
+    end
+    handler -> handler: Set access token to\nrequest Authorization\nheader
+
+    handler -> next++: Pass request upstream
+    handler <- next--
+    browser <- handler--: Stream response to\nbrowser
+end
+@enduml

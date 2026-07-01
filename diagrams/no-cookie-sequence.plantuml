@@ -1,0 +1,40 @@
+@startuml
+
+!include style.plantuml
+
+participant browser as "Browser\n(User)"
+participant handler as "Handler"
+participant cookie as "Secure Cookie"
+participant provider as "Provider"
+participant next as "Next"
+
+title "No Cookie Flow"
+
+browser -> handler++: Send request\nwithout cookie
+handler -> handler: PKCE: Generate\ncode verifier
+handler -> cookie++: Store the code verifier\nand original URL
+handler <- cookie--
+browser <- handler--: HTTP 302\nLocation: Provider auth start\nwith code challenge\n(and redirect_url to original\nrequest url if supported)\nand set secure cookie
+browser -> provider++: Perform Login
+browser <- provider--: HTTP 302\nLocation: /oauth/callback\nwith authorization code
+browser -> handler++: Request with cookie holding\nkey for getting code verifier
+handler -> cookie++: Get code verifier
+handler <- cookie--
+
+alt No code verifier or expired
+    browser <- handler--: Delete the cookie and\nHTTP 302\nLocation: {configurable error page}
+else
+    handler -[hidden]-> handler++
+    handler -> provider++: Send verifier and\nauthorization code
+    handler <- provider--: Respond with tokens
+
+    handler -> cookie++: overwrite with tokens
+    handler <- cookie--
+
+    browser <- handler--: HTTP 302\nLocation: original URL
+    browser -[hidden]-> browser
+    note right
+        Begin "Cookie Exists Flow"
+    end note
+end
+@enduml
