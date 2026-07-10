@@ -155,7 +155,7 @@ func (h *Handler) handleActive(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if needsRefresh(val) {
+	if h.needsRefresh(val) {
 		val.Token, err = h.provider.Refresh(val.Token)
 		if err != nil {
 			err = fmt.Errorf("failed to refresh tokens: %w", err)
@@ -173,7 +173,7 @@ func (h *Handler) handleActive(w http.ResponseWriter, r *http.Request) {
 
 func getJWTExp(t string) (time.Time, error) {
 	claims := struct {
-		exp int64 `json:"exp"`
+		Exp int64 `json:"exp"`
 	}{}
 
 	parts := strings.Split(t, ".")
@@ -191,10 +191,10 @@ func getJWTExp(t string) (time.Time, error) {
 		return time.Time{}, fmt.Errorf("failed to unmarshal token: %w", err)
 	}
 
-	return time.Unix(claims.exp, 0), nil
+	return time.Unix(claims.Exp, 0).UTC(), nil
 }
 
-func needsRefresh(val CookieVal) bool {
+func (h *Handler) needsRefresh(val CookieVal) bool {
 	exp := val.Token.Expiry
 	if exp.IsZero() { // We need to get the exp time from the token itself if there's nothing there.
 		var err error
@@ -205,5 +205,5 @@ func needsRefresh(val CookieVal) bool {
 	}
 
 	// TODO: Configurable eager token refresh splay
-	return val.Token.Expiry.Before(time.Now().Add(-(time.Second * 10)))
+	return val.Token.Expiry.Before(h.now().Add(-(time.Second * 10)))
 }
