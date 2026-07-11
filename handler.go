@@ -156,6 +156,7 @@ func (h *Handler) handleActive(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.needsRefresh(val) {
+		h.slogger.Info("refreshing token")
 		val.Token, err = h.provider.Refresh(val.Token)
 		if err != nil {
 			err = fmt.Errorf("failed to refresh tokens: %w", err)
@@ -205,5 +206,5 @@ func (h *Handler) needsRefresh(val CookieVal) bool {
 	}
 
 	// TODO: Configurable eager token refresh splay
-	return val.Token.Expiry.Before(h.now().Add(-(time.Second * 10)))
+	return exp.Before(h.now().Add(-(time.Second * 10)))
 }
